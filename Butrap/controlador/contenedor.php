@@ -99,7 +99,7 @@ class Contenedor
         } catch (mysqli_sql_exception $e) {
             $codigoErrorMySQL = $e->getCode();
             
-            // Al igual que con la cédula, el error 1062 significa que el ID ya existe
+            // Lo mismo  que con la cédula, el error 1062 significa que el ID ya existe
             if ($codigoErrorMySQL === 1062) {
                 http_response_code(400);
                 echo json_encode(["mensaje" => "⚠️ Error: El número identificador de contenedor ya se encuentra registrado en el sistema."]);
