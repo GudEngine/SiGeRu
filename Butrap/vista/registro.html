@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GudEngine - Registro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/loguearse.css"> 
+</head>
+<body class="d-flex align-items-center min-vh-100  bg-primary">
+    <div class="container" style="max-width: 1000px;">
+        
+        <div class="row g-0 rounded shadow overflow-hidden">
+            <div class="col-12 col-md-6 p-4 flex-column bg-light" >
+                
+                <h2 class="fw-bold mb-4">Registrarse</h2>
+                
+                <form id="form_registro">
+                    <div class="mb-3">
+                        <input type="text" id="ci" class="form-control form-control-lg" maxlength="8" placeholder="Cédula 12345678" required>
+                    </div>
+                    <div class="mb-3">
+                        <input type="email" id="email" class="form-control form-control-lg" placeholder="E-mail" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <input type="password" id="password" class="form-control form-control-lg" placeholder="Contraseña" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-theme btn-lg w-100 mb-3" style=" border: none;">
+                        Registrarse
+                    </button>
+                </form>
+
+
+               <script>
+                 document.getElementById('form_registro').addEventListener('submit', function(e) {
+                e.preventDefault();
+                //tenerlos en const y luego hacerles .value es una manera de evitar que vengan vacíos
+                //porque el .value tiraría error en dicho caso
+                    const ci = document.getElementById('ci');
+                    const email = document.getElementById('email');
+                    const password = document.getElementById('password');
+
+                    // 2. Construcción del objeto JSON para enviar al backend
+                    const nuevoUsuario = {
+                        usr_ci: parseInt(ci.value),
+                        usr_email: email.value,
+                        usr_password: password.value,
+                        usr_rol: 'vecino' //el vecinito es el único que se puede registrar desde acá, 
+                        //se puede hardcodear el rol en este caso
+                    };
+
+                    fetch(`../controlador/api_usuarios.php/registro`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(nuevoUsuario)
+                    })//tengo una piterson teorías
+                    .then(response => {
+                        return response.json();
+                    })           
+                    .then(respuesta => {
+                        alert(respuesta.mensaje); 
+
+                        if (respuesta.mensaje.includes("con éxito")) { 
+                            window.location.href = "login.html";//esto es como el header() pero en js
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error al registrar:", err);
+                        alert("Hubo un fallo crítico al conectar con la API.");
+                    });
+                });
+               </script>
+              
+
+
+            <div class="mt-2 small">                    
+                    <p class="mb-0">¿Ya tenés una cuenta? 
+                        <a href="login.html" class="fw-bold text-decoration-none" style="color: #0d6efd;">Logueate</a>
+                    </p> 
+                </div>
+                
+            </div>
+
+            <div class="col-12 col-md-6 position-relative  align-items-center justify-content-center text-center">
+                
+                <img src="../img/gudZapato.png" alt="Auto Gud" class="w-100 h-100" style="object-fit: cover; min-height: 300px;">
+                
+                <div class="position-absolute" style="top: 0%; ">
+                    <h2 class="fw-bold text-dark lh-sm" style="text-shadow: 0px 0px 8px rgba(255,255,255,0.8);">
+                        El auto de Gud no emite gases
+                    </h2>
+                </div>
+                <div class="position-absolute" style="bottom: 0%; ">
+                    <h2 class="fw-bold text-white lh-sm" style="text-shadow: 0px 0px 8px rgba(10, 14, 250, 0.8);">
+                        Gud respeta el medio ambiente
+                    </h2>
+                </div>
+                
+            </div>
+
+        </div>
+        
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

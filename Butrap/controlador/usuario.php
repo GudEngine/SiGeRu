@@ -76,6 +76,72 @@ class Usuario
 		}
 		 
 	}
+	//registro del vecinirijillo
+	public function addVecino($data) {
+    // 1. Verificación básica de existencia
+    if (empty($data['usr_ci']) || trim($data['usr_ci']) === "" || 
+        empty($data['usr_email']) || trim($data['usr_email']) === "" || 
+        empty($data['usr_password']) || trim($data['usr_password']) === "" || 
+        empty($data['usr_rol']) || trim($data['usr_rol']) === "") {
+        
+        http_response_code(400);
+        echo json_encode(["mensaje" => "🙅 Error: Todos los campos son obligatorios y no pueden estar vacíos."]);
+        exit;
+    }
+
+    // 2. Limpieza de espacios con trim
+    $usr_ci       = trim($data['usr_ci']);
+    $usr_email    = trim($data['usr_email']);
+    $usr_password = trim($data['usr_password']);
+    $usr_rol      = trim($data['usr_rol']);
+
+    // 3. Validación de Cédula de Identidad (8 dígitos numéricos)
+    if (!ctype_digit($usr_ci) || strlen($usr_ci) !== 8) {
+        http_response_code(400);
+        echo json_encode(["mensaje" => "⚠️ Error: La Cédula de Identidad debe contener únicamente 8 números, sin puntos ni guiones."]);
+        exit;
+    }
+
+    // 3.5. Validación básica de formato de correo electrónico
+    if (!filter_var($usr_email, FILTER_VALIDATE_EMAIL)) {
+        http_response_code(400);
+        echo json_encode(["mensaje" => "⚠️ Error: El formato del correo electrónico no es válido."]);
+        exit;
+    }
+
+    // 4. Escape de caracteres para la consulta MySQL
+    $usr_ci       = mysqli_real_escape_string($this->conn, $usr_ci);
+    $usr_email    = mysqli_real_escape_string($this->conn, $usr_email);
+    $usr_password = mysqli_real_escape_string($this->conn, $usr_password);
+    $usr_rol      = mysqli_real_escape_string($this->conn, $usr_rol);
+
+    try {
+        $query = "INSERT INTO usuario (usr_ci, usr_name, usr_email, usr_password, usr_rol) 
+                  VALUES ('$usr_ci', 'vecino', '$usr_email', '$usr_password', '$usr_rol')";
+        
+        mysqli_query($this->conn, $query);
+
+        http_response_code(201); // 201 = Creado con éxito
+        echo json_encode(["mensaje" => "Vecino registrado con éxito."]);
+        exit;
+
+    } catch (mysqli_sql_exception $e) {
+        $codigo_error_mysql = $e->getCode();
+        
+        if ($codigo_error_mysql === 1062) {
+            http_response_code(400);
+            echo json_encode(["mensaje" => "⚠️ Error: La Cédula de Identidad o el email ya se encuentra registrado."]);
+        } else {
+            http_response_code(500);
+            echo json_encode(["mensaje" => "Error interno en el servidor municipal: " . $e->getMessage()]);
+        }
+        exit;
+    }
+}
+
+
+
+
 	// Agregar un nuevo usuario (método POST, endopoint: /usuarios)
 	public function addUsuario($data){
     // 1. Verificación básica de existencia
@@ -196,46 +262,65 @@ class Usuario
 				exit;
 			}
 		} catch (mysqli_sql_exception $e) {
-		//	$codigoErrorMySQL = $e->getCode();
+			$codigoErrorMySQL = $e->getCode();
 	
-			/*if ($codigoErrorMySQL === 1062) {
+			if ($codigoErrorMySQL === 1062) {
 				http_response_code(400);
 				echo json_encode(["mensaje" => "⚠️ Error: El correo electrónico ya se encuentra registrado por otro usuario."]);
-			} else {*/
+			} else {
 				// felizmente, creo que no hay errores de usuario que caigan acá
 				http_response_code(500);
 				echo json_encode(["mensaje" => "Error interno en el servidor municipal: " . $e->getMessage()]);
-		//	}
+			}
 			exit;
-			//lo demás lo dejo por si ponemos correo como unique
 		}
 	}
 
 	// Iniciar sesión de usuario (método POST, endopoint: /login)
-	public function loginUsuario($data){
-		if(!isset($data['usr_email']) || !isset($data['usr_pass'])) {
+	public function loginUsuario($data) {
+		if (empty($data['usr_email']) || empty($data['usr_password']) || empty($data['usr_rol'])) {
 			http_response_code(400);
-			return json_encode(["error" => "Datos incompletos"]);
-		}else{
-			$usr_email = $data['usr_email'];
-			$usr_pass = $data['usr_pass'];
-			$query = "SELECT * FROM usuario WHERE usr_email = '$usr_email'";
-			$result = mysqli_query($this->conn, $query);
-			if(mysqli_num_rows($result) > 0){
-				$usuario = mysqli_fetch_assoc($result);
-				if(password_verify($usr_pass, $usuario['usr_pass'])){
-					$result = mysqli_query($this->conn, $query);
-					http_response_code(200);
-					return json_encode(["success" => [$usuario['usr_name'], $usr_email, $usuario['ID'] ]])	;
+			echo json_encode(["mensaje" => "⚠️ Debe seleccionar su rol e ingresar e-mail y contraseña."]);
+			exit;
+		}
 
-				} else {
-					http_response_code(400);
-					return json_encode(["error" => "Contraseña incorrecta"]);
-				}
+		$usr_email    = mysqli_real_escape_string($this->conn, trim($data['usr_email']));
+		$usr_rol      = mysqli_real_escape_string($this->conn, trim($data['usr_rol']));
+		$usr_password = trim($data['usr_password']);
+
+		// que ese email exista, y en ese rol(después vemos si es meritorio cambiar email por cédula)
+		$query = "SELECT * FROM usuario WHERE usr_email = '$usr_email' AND usr_rol = '$usr_rol'";
+		$result = mysqli_query($this->conn, $query);
+
+		if (mysqli_num_rows($result) > 0) {
+			$usuario = mysqli_fetch_assoc($result);
+
+			if ($usr_password === $usuario['usr_password']) {
+				
+				if (session_status() === PHP_SESSION_NONE) { session_start(); }
+				
+				// guarda sesión 
+				$_SESSION['usr_ci']     = $usuario['usr_ci'];
+				$_SESSION['usr_name']   = $usuario['usr_name'];
+				$_SESSION['usr_email']  = $usuario['usr_email'];
+				$_SESSION['usr_rol']    = $usuario['usr_rol'];
+
+				http_response_code(200);
+				echo json_encode([
+					"mensaje" => "Inicio de sesión con éxito.",
+					"rol"     => $usuario['usr_rol']
+				]);
+				exit;
+
 			} else {
 				http_response_code(400);
-				return json_encode(["error" => "Usuario no encontrado"]);
+				echo json_encode(["mensaje" => "⚠️ Contraseña incorrecta."]);
+				exit;
 			}
+		} else {
+			http_response_code(400);
+			echo json_encode(["mensaje" => "⚠️ No existe un usuario con ese e-mail registrado como " . $usr_rol]);
+			exit;
 		}
 	}
 }

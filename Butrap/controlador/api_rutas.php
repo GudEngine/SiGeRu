@@ -17,8 +17,7 @@ switch ($method) {
             $rutas = $rutaObj->getAllRutas();
             echo json_encode($rutas);
             exit;
-        }//bitacora del integrante: Mensaje para el futuro yo:
-        //no sé si lo precisaré pero animate algún día a getearme una ruta por ID
+        }
     case 'POST':
         if ($endpoint === '/rutas') {
             // Lee el JSON entrante

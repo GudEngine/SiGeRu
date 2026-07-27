@@ -47,6 +47,9 @@ switch ($method) {
 		}else if($endpoint === '/modificar'){
 			$data = json_decode(file_get_contents('php://input'), true);
     		$usuarioObj->modificarUsuario($data);
+		}else if ($endpoint === '/registro'){
+			$data = json_decode(file_get_contents('php://input'), true);
+			$usuarioObj->addVecino($data);
 		}
 		break;
 		case 'DELETE':

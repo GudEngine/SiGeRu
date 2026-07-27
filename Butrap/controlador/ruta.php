@@ -11,7 +11,7 @@ class Ruta
         $this->conn = $conn;
     }
 
-    //traer todas las rutas de lahistoria, algún día si lo veo preciso, cambiaré esto por rutas de
+    //trae todas las rutas de lahistoria, algún día si lo veo preciso, cambiaré esto por rutas de
     //la semana o algo así
     public function getAllRutas(){
         // Traemos los datos cruzando la cabecera (ruta) con el detalle (ruta_contenedor)
@@ -22,7 +22,7 @@ class Ruta
                     
         $result = mysqli_query($this->conn, $query);
         
-        // Si la consulta falla por alguna razón externa, evitamos un crash devolviendo un array vacío
+        // Si la consulta falla por alguna razón externa, evitamos un crasheo devolviendo un array vacío
         if (!$result) {
             return [];
         }
@@ -31,10 +31,10 @@ class Ruta
         
         // Vamos asignándole a $row el valor de cada fila devuelta por MySQL
         while ($row = mysqli_fetch_assoc($result)) {
-            // Mantenemos tu genial idea de usar la clave combinada [fecha]_[id_ruta]
+            // Mantenemos la clave combinada [fecha]_[id_ruta]
             $claveUnica = $row['ruta_fecha'] . '_' . $row['ruta_id'];
 
-            // Si es la primera vez que vemos esta combinación en el bucle, inicializamos la columna de la ruta
+            // Si es la primera vez que vemos esta combinación en el bucle, inicializamos la fila de esa ruta
             if (!isset($rutasAgrupadas[$claveUnica])) {
                 $rutasAgrupadas[$claveUnica] = [
                     "ruta_id"      => intval($row['ruta_id']),
@@ -52,7 +52,7 @@ class Ruta
             ];
         }
 
-        // Quitamos las claves temporales (ej: '2026-07-19_10') y devolvemos la lista limpia e indexada
+        // 
         return array_values($rutasAgrupadas);
     }
 

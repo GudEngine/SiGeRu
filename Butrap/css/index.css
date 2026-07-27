@@ -1,49 +1,55 @@
 
 :root {
-    /* Fondo y texto general */
+    /* Fondo y texto normal */
     --bg-color: #ffffff;
     --text-color: #212529;
-    --text-secondary: #5e656f; /* Gris intermedio para textos secundarios */
     
-    /* Componentes y acentos */
+    
     --card-bg: #ffffff; 
     --accent-color: #0d6efd; /* Azul Bootstrap para botones */
     --border-color: #dee2e6;
     
-    --heroe-bg: #14a37f; /* Un verde esmeralda legible y serio */
+    --heroe-bg: #14a37f; /*  verde esmeralda legible*/
 }
 
 /* =========================
    TEMA OSCURO
    ========================= */
 .dark-mode {
-    /* Fondo y texto general */
-    --bg-color: #121212; /* Negro mate */
-    --text-color: #e9ecef; /* Blanco suave */
-    --text-secondary: #9da4ae; /* Gris que no encandila */
-    
-    /* Componentes y acentos */
-    --card-bg: #1e1e1e; /* Tarjetas elevadas */
-    --accent-color: #4dabf7; /* Azul más claro para que resalte de noche */
-    --border-color: #2d3139; /* Bordes sutiles oscuros */
-    
-    /* El bloque de GudEngine en modo nocturno */
-    --heroe-bg: #092e22; /* Verde bosque oscuro, estilo terminal pro */
+    --bg-color: #121212;
+    --text-color: #e9ecef;
+    --card-bg: #1e1e1e;
+    --accent-color: #4dabf7;
+    --border-color: #2d3139;
+    --heroe-bg: #092e22;
 }
 
-/* APLICACIÓN DE ESTILOS ESTABLES */
+
 body {
     background: var(--bg-color);
-    color: var(--text-color);
+    color: var(--text-color) ;
     transition: background-color .3s ease, color .3s ease;
 }
 
-/* Para los textos secundarios como "Gud enough" */
-.text-muted-custom {
-    color: var(--text-secondary) !important;
+.card,  .table-container {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-color) !important;
 }
 
-.heroico div {
+.table {
+            --bs-table-bg: var(--card-bg);
+            --bs-table-color: var(--text-color) !important;
+            --bs-table-border-color: var(--border-color);
+}
+.dark-mode select, .dark-mode input{
+    
+    background-color: var(--heroe-bg);
+    color: var(--accent-color);
+}
+
+
+.heroico {
     background-color: var(--heroe-bg) !important;
     border-color: var(--border-color) !important;
     transition: background-color .3s ease, border-color .3s ease;
