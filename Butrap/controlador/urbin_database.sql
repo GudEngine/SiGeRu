@@ -9,7 +9,6 @@ usr_password varchar(25) default 'contraseña', /*un default contraseña es clar
 usr_telefono int);
 use urbin;
 
-
 create table contenedor(
 cont_id int,
 cont_calle varchar(29) ,
@@ -36,7 +35,7 @@ check (acopio_volumen_llenado<=1),
 constraint foreign key(acopio_operario) references usuario(usr_ci));
 
 create table ruta(
-ruta_id int,
+ruta_id int auto_increment,
 ruta_fecha date,
 ruta_camion varchar(7),
 ruta_acopio int,
@@ -63,15 +62,7 @@ cuad_cam char(7),
 constraint foreign key(cuad_ci) references usuario(usr_ci),
 constraint foreign key(cuad_cam) references camion(cam_matricula)
 );
-create table camion_ruta(
-cam_ruta_camion char(7),
-cam_ruta_ruta_id int,
-cam_ruta_fecha date,
-primary key(cam_ruta_ruta_id, cam_ruta_fecha),
-constraint foreign key(cam_ruta_camion) references camion(cam_matricula),
-constraint foreign key(cam_ruta_ruta_id, cam_ruta_fecha) references ruta(ruta_id, ruta_fecha)
-);
-drop table camion_ruta;
+
 create table vertedero(
 nom_vertedero varchar(15) primary key,
 calle_vertedero varchar(15),
