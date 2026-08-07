@@ -1,0 +1,1005 @@
+<?php
+session_start();
+
+// Verificamos que esté logueado y que sea Administrador
+if (!isset($_SESSION['usr_ci']) || $_SESSION['usr_rol'] !== 'administrador') {
+    header("Location: login.html");
+    exit();
+}
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GudEngine - Registro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="../css/index.css">
+
+</head>
+<body>
+
+    <nav class="navbar navbar-dark bg-dark shadow-sm">
+        <div class="container-fluid px-4">
+            <span class="navbar-brand fw-bold">
+                SiGeRu - Oficina de <?php echo $_SESSION['usr_name']; ?>
+            </span>
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-outline-light btn-sm" id="btn-theme">
+                    <i class="bi bi-moon-stars"></i> Modo Oscuro
+                </button>
+                <!-- Botón para destruir la sesión y salir -->
+                <a href="../controlador/logout.php" class="btn btn-danger btn-sm">Cerrar Sesión</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <div class="row g-4">
+            
+            <div class="col-12 col-lg-4">
+                <div class="card p-4 rounded shadow-sm">
+                    
+                    <div class="row g-2 mb-3">
+                        <!-- Selector de Entidad -->
+                        <div class="col-12"> <!-- Cambiado a col-12 para que ocupe todo el ancho disponible de la tarjeta -->
+                            <label class="form-label small fw-bold text-primary mb-1">1. Seleccione Gestión</label>
+                            <select id="selector_entidad" class="form-select border-primary fw-bold" onchange="cambiarEntidad()">
+                                <option value="usuarios">Gestión de Personal (Usuarios)</option>
+                                <option value="contenedores">Gestión de Infraestructura (Contenedores)</option>
+                                <option value="camiones">Gestión de la flota de camiones</option>
+                                <option value="rutas">Gestión de rutas</option>
+                            </select>
+                        </div>
+
+                        <!-- Selector de Operación -->
+                        <div class="col-12 mb-4">
+                            <label class="form-label small fw-bold text-primary mb-1">2. Seleccione Operación</label>
+                            <select id="selector_operacion" class="form-select border-primary fw-bold" onchange="cambiarFormularios()">
+                                <option value="registro_usuarios">Registrar Nuevo Usuario</option>
+                                <option value="modificacion_usuarios">Modificar Usuario</option>
+                                <option value="eliminacion_usuarios">Eliminar Usuario</option>
+                            </select>
+                        </div>
+                    </div>
+
+
+                    <form id="form_registro_usuarios">
+                        <h5 class="fw-bold mb-3 text-success">Alta de Personal</h5>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Cédula de Identidad</label>
+                            <input type="text" id="ci" class="form-control" maxlength="8" placeholder="ej. 12345678" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Nombre Completo (NomUs)</label>
+                            <input type="text" id="name" class="form-control" placeholder="ej. Juan Pérez" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Correo Electrónico</label>
+                            <input type="email" id="email" class="form-control" placeholder="juan@municipio.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Teléfono de Contacto</label>
+                            <input type="text" id="telefono" class="form-control" maxlength="8" placeholder="ej. 99123456,NO 099123456 ">
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold">Rol Operativo</label>
+                            <select id="rol" class="form-select" required>
+                                <option value="" disabled selected>Seleccione un rol...</option>
+                                <option value="recolector">Cuadrilla de Recolección</option>
+                                <option value="operario_acopio">Administrador de centro de acopio</option>
+                                <option value="operario_vertedero">Administrador de Vertedero</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 fw-bold">Confirmar Registro</button>
+                    </form>
+                        <!--modificar usuarios-->
+                    <form id="form_modificacion_usuarios" class="d-none">
+                        <h5 class="fw-bold mb-3 text-warning">Modificar Datos</h5>
+                        <p class="fw-bold small">>La CI no se puede cambiar.</p>
+                        
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Cédula del usuario a modificar</label>
+                            <input type="text" id="mod_ci" class="form-control border-warning" maxlength="8" placeholder="Ingrese CI existente" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Nuevo Nombre</label>
+                            <input type="text" id="mod_name" class="form-control" placeholder="Nombre actualizado">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Nuevo Email</label>
+                            <input type="email" id="mod_email" class="form-control" placeholder="Email actualizado">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Nuevo Teléfono</label>
+                            <input type="text" id="mod_telefono" class="form-control" maxlength="8" placeholder="Teléfono actualizado">
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold">Nuevo Rol</label>
+                            <select id="mod_rol" class="form-select">
+                                <option value="recolector">Cuadrilla de Recolección</option>
+                                <option value="operario_acopio">Administrador de centro de acopio</option>
+                                <option value="operario_vertedero">Administrador de Vertedero</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100 fw-bold text-dark">Guardar Cambios</button>
+                    </form>
+
+                    <form id="form_eliminacion_usuarios" class="d-none">
+                        <h5 class="fw-bold mb-3 text-danger">Baja del Sistema</h5>
+                        
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold">Cédula de Identidad del Funcionario</label>
+                            <input type="text" id="cedula_eliminar" class="form-control border-danger form-control-lg" maxlength="8" placeholder="ej. 12345678" required>
+                        <p class="fw-bold small">⚠️ Atención: Esta acción eliminará permanentemente al usuario de la base de datos municipal.</p>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-danger w-100 fw-bold">Eliminar Definitivamente</button>
+                    </form>
+
+                    <!-- FORMULARIO: ALTA DE CONTENEDORES -->
+                    <form id="form_registro_contenedores" class="d-none">
+                        <h5 class="fw-bold mb-3 text-success">Alta de Contenedor de Residuos</h5>
+                        <p class="small">Registre la ubicación y el estado inicial de una nueva unidad en la vía pública.</p>
+                        
+                        <!-- ID del Contenedor -->
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Número de Contenedor (ID)</label>
+                            <input type="number" id="cont_id" class="form-control border-success" placeholder="Ej: 1024" required>
+                            <p class="fw-bold small">Debe ser un identificador numérico único.</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Calle / Ubicación</label>
+                            <!-- atributo maxlength, pone un máximo de caracteres  VARCHAR(29) -->
+                            <input type="text" id="cont_calle" class="form-control" maxlength="29" placeholder="Ej: Av. 18 de Julio" required>
+                        </div>
+
+                        <!-- Estado Inicial -->
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold">Estado del Contenedor</label>
+                            <select id="cont_estado" class="form-select">
+                                <option value="funcional">Funcional</option>
+                                <option value="roto">Roto</option>
+                                <option value="desbordado">Desbordado</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 fw-bold text-white">Registrar Contenedor</button>
+                    </form>
+                    <!--Alta de camioncitos-->
+                    <form id="form_registro_camiones" class="d-none">
+                        <h3 class="text-secondary mb-3">Registrar Nuevo Camión</h3>
+
+                        <!-- Matrícula (Uruguaya, empieza con S) -->
+                        <div class="mb-3">
+                            <label for="cam_matricula" class="form-label fw-bold">Matrícula (Patente)</label>
+                            <input type="text" class="form-control border-secondary" id="cam_matricula" 
+                                placeholder="SXX 1234" maxlength="8" required>
+                            <p class="fw-bold small">Debe empezar con 'S' (Montevideo) seguido de 2 letras y 4 números (ej: SAB 1234).</p>
+                        </div>
+
+                        <!-- Tipo de Camión (Selector) -->
+                        <div class="mb-3">
+                            <label for="cam_tipo" class="form-label fw-bold">Tipo de Camión</label>
+                            <select class="form-select border-secondary" id="cam_tipo" required>
+                                <option value="" disabled selected>Seleccione el tipo</option>
+                                <option value="ruta">Camión de ruta</option>
+                                <option value="reciclaje">Camión de reciclaje</option>
+                            </select>
+                        </div>
+
+                        <!-- Modelo (Selector) -->
+                        <div class="mb-3">
+                            <label for="cam_modelo" class="form-label fw-bold">Modelo / Marca</label>
+                            <select class="form-select border-secondary" id="cam_modelo" required>
+                                <option value="" disabled selected>Seleccione el modelo</option>
+                                <option value="Mercedes-Benz">Mercedes-Benz</option>
+                                <option value="Caterpillar">Caterpillar</option>
+                            </select>
+                        </div>
+
+                        <!-- Estado Funcional (Selector) -->
+                        <div class="mb-3">
+                            <label for="cam_estado" class="form-label fw-bold">Estado del Vehículo</label>
+                            <select class="form-select border-secondary" id="cam_estado" required>
+                                <option value="" disabled selected>Seleccione el estado</option>
+                                <option value="funcional">Funcional</option>
+                                <option value="roto">Necesita reparación</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 fw-bold">
+                            <!-- este tal bi es para poner íconos bonitos -->
+                            <i class="bi bi-truck"></i> Registrar Camión
+                        </button>
+                    </form>
+
+                    <form id="form_registro_rutas" class="d-none">
+                        <h3 class="text-secondary mb-3">Registrar Nueva Ruta de Recolección</h3>
+
+                        <!-- Número de Ruta -->
+                        <div class="mb-3">
+                            <label for="ruta_id" class="form-label fw-bold">Número de Ruta</label>
+                            <input type="number" class="form-control border-secondary" id="ruta_id" 
+                                placeholder="Ej: 101" min="1" required>
+                            <p class="fw-bold small">Asigne un identificador numérico único para la ruta.</p>
+                        </div>
+
+                        <!-- Fecha de la Ruta -->
+                        <div class="mb-3">
+                            <label for="ruta_fecha" class="form-label fw-bold">Fecha de Planificación</label>
+                            <input type="date" class="form-control border-secondary" id="ruta_fecha" required>
+                        </div>
+
+                        <!-- Selección de Camión (Dinámico) -->
+                        <div class="mb-3">
+                            <label for="ruta_camion" class="form-label fw-bold">Camión Asignado</label>
+                            <select class="form-select border-secondary" id="ruta_camion" required>
+                                <option value="" disabled selected>Cargando camiones disponibles...</option>
+                            </select>
+                        </div>
+
+                        <!-- Selección de Contenedores (Texto separado por comas) -->
+                        <div class="mb-3">
+                            <label for="ruta_contenedores" class="form-label fw-bold">IDs de Contenedores asignados</label>
+                            <input type="text" class="form-control border-secondary" id="ruta_contenedores" 
+                                placeholder="Ej: 12, 15, 18" required>
+                            <p class="fw-bold small">>Ingrese los IDs de los contenedores separados por comas.</p>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 fw-bold">
+                            <i class="bi bi-geo-alt"></i> Crear y Asignar Ruta
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="col-12 col-lg-8">
+                <div class="card p-2 mb-3">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <!-- Selector  para las tablas -->
+                        <select id="selector_tabla" class="form-select border-secondary fw-bold w-auto" onchange="cambiarTablaVisualizada()">
+                            <option value="tabla_usuarios" selected>Ver Tabla: Personal / Usuarios</option>
+                            <option value="tabla_contenedores">Ver Tabla:Contenedores</option>
+                            <option value="tabla_camiones">Ver Tabla: Flota (Camiones)</option> 
+                            <option value="tabla_rutas">Ver Tabla: Rutas</option>
+                        </select>
+                    </div>
+
+                    <!-- Tabla con los usuarios -->
+                    <div id="contenedor_tabla_usuarios">
+                        <div id="tabla_usuarios" class="table-responsive">
+                        <!-- me gusta creer que acá se inyectará magicamente la tabla-->
+                        </div>
+                    </div>
+
+                    <!-- Tabla  con mis bellos contenedores -->
+                    <div id="contenedor_tabla_contenedores" class="d-none"> 
+                        <div id="tabla_contenedores" class="table-responsive">
+
+                        </div>
+                    </div>
+
+                    <!-- Tabla con camiones-->
+                    <div id="contenedor_tabla_camiones" class="d-none"> 
+                        <div id="tabla_camiones" class="table-responsive">
+
+                        </div>
+                    </div>
+                    <div id="contenedor_tabla_rutas" class="d-none"> 
+                        <div id="tabla_rutas" class="table-responsive">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+<!-- cambio de formularios-->
+<script>
+// Esta función se ejecuta cuando cambias entre Usuarios y Contenedores
+function cambiarEntidad() {
+    const entidad = document.getElementById('selector_entidad').value;
+    const selectorOperacion = document.getElementById('selector_operacion');
+    
+    // Limpiamos las opciones anteriores del segundo selector
+    selectorOperacion.innerHTML = '';
+    
+    if (entidad === 'usuarios') {
+        selectorOperacion.innerHTML = `
+            <option value="registro_usuarios">Registrar Nuevo Usuario</option>
+            <option value="modificacion_usuarios">Modificar Usuario</option>
+            <option value="eliminacion_usuarios">Eliminar Usuario</option>
+        `;
+    } else if (entidad === 'contenedores') {
+        selectorOperacion.innerHTML = `
+            <option value="registro_contenedores">Alta de Contenedor</option>
+            <!-- me encanta tener un ABM entero, pero no voy a programar esto ahora que sino no llego para la 1era entrega -->
+            <option value="modificacion_contenedores" disabled>Modificar Contenedor (2da Entrega)</option>
+            <option value="eliminacion_contenedores" disabled>Eliminar Contenedor (2da Entrega)</option>
+        `;
+    } else if (entidad === 'camiones') {
+        selectorOperacion.innerHTML = `
+            <option value="registro_camiones">Alta de Camión</option>
+            <option value="modificacion_camiones" disabled>Modificar Camión (2da Entrega)</option>
+            <option value="eliminacion_camiones" disabled>Eliminar Camión (2da entrega)</option>
+        `;
+    }else if (entidad === 'rutas') {
+        selectorOperacion.innerHTML = `
+            <option value="registro_rutas">Alta de Rutas</option>
+            <option value="modificacion_rutas" disabled>Modificar Ruta (Una aventura)</option>
+            <option value="eliminacion_rutas" disabled>Eliminar Ruta (para otro día)</option>
+        `;
+    }
+    
+    // Forzamos la actualización de la vista de los formularios
+    cambiarFormularios();
+}
+
+// Esta función oculta y muestra los formularios
+function cambiarFormularios() {
+    const operacionSeleccionada = document.getElementById('selector_operacion').value;
+    const entidadSeleccionada = document.getElementById('selector_entidad').value;
+
+    // 1. arreglo de TODOS los formularios existentes en la página
+    const formularios = [
+        'form_registro_usuarios', 
+        'form_modificacion_usuarios', 
+        'form_eliminacion_usuarios',
+        'form_registro_contenedores',
+        'form_registro_camiones',
+        'form_registro_rutas'
+    ];
+     
+    
+    // Recorremos y mostramos solo el seleccionado
+    formularios.forEach(idForm => {
+        const formulario = document.getElementById(idForm);
+        if (formulario) {
+            if (idForm === `form_${operacionSeleccionada}`) {
+                formulario.classList.remove('d-none');
+                if (idForm === `form_registro_rutas`) {
+                    inicializarFormularioRutas(); // mandamos los camiones funcionales
+                }
+            } else {
+                formulario.classList.add('d-none');
+            }
+        }
+    });
+
+    // 2. Control de Tablas (Para que se vea la tabla correspondiente)
+    
+}
+    function cambiarTablaVisualizada() {
+        const tabla_seleccionada = document.getElementById('selector_tabla').value;
+        const div_usuarios = document.getElementById('contenedor_tabla_usuarios');
+        const div_contenedores = document.getElementById('contenedor_tabla_contenedores');
+        const div_camiones = document.getElementById('contenedor_tabla_camiones');
+        const div_rutas = document.getElementById('contenedor_tabla_rutas');
+
+
+        if (div_usuarios && div_contenedores && div_camiones && div_rutas) {
+                div_usuarios.classList.add('d-none');
+                div_contenedores.classList.add('d-none');
+                div_camiones.classList.add('d-none');
+                div_rutas.classList.add('d-none');
+
+            if (tabla_seleccionada === 'tabla_usuarios') {
+                div_usuarios.classList.remove('d-none');
+                // Aprovechamos pa' refrescar los datos de usuarios al cambiar
+                cargarUsuarios();
+            } else if(tabla_seleccionada === 'tabla_contenedores'){
+                div_contenedores.classList.remove('d-none');
+                // Refrescamos los datos de contenedores al cambiar
+                cargarContenedores();
+            }
+            else if(tabla_seleccionada === 'tabla_camiones'){
+                div_camiones.classList.remove('d-none');
+                cargarCamiones();
+            } else if(tabla_seleccionada === 'tabla_rutas'){
+                div_rutas.classList.remove('d-none');
+                cargarRutas();
+            }
+
+        }
+    }
+    
+</script>
+
+        <!--1. CARGAR Y LISTAR USUARIOS (GET)-->
+
+<script>
+        const API_URL = '../controlador/api_usuarios.php';
+        function cargarUsuarios() {
+            fetch(`${API_URL}/usuarios`)
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('tabla_usuarios');
+                
+                // Si el elemento no existe en el HTML, salimos en  sin romper el script
+                if (!tbody) return; 
+                    
+                //por si ya se había cargado la tabla antes, limpia el tbody para no duplicar los
+                //filas de usuarios anteriores
+                tbody.innerHTML = ''; // Limpiamos
+
+                // Si no hay datos, mostramos el mensaje directo en el div
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = `<p class="text-center text-muted py-3">No hay personal operativo registrado.</p>`;
+                    return;
+                }
+                
+                // Si hay datos, llamamos a la función de dibujo
+                loadUsuarios(data); 
+            })
+            .catch(err => console.error("Error al cargar usuarios:", err));
+        }
+        // 4. LÓGICA AUXILIAR: MODO OSCURO & BOTONES
+        document.getElementById('btn-actualizar')?.addEventListener('click', cargarUsuarios);
+        
+        document.getElementById('btn-theme').addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            document.getElementById('btn-theme').innerHTML = isDark 
+                ? '<i class="bi bi-sun"></i> Modo Claro' 
+                : '<i class="bi bi-moon-stars"></i> Modo Oscuro';
+        });
+
+        // Carga inicial al abrir la página
+        document.addEventListener("DOMContentLoaded", cargarUsuarios);
+    </script>
+    <!--1 Cargar y Listar conteiners-->
+    <script>
+        function cargarContenedores() {
+            fetch(`${API_CONTENEDORES}/contenedores`)
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('tabla_contenedores');
+                
+                // Escudo protector: si no existe, no rompemos nada
+                if (!tbody) return; 
+
+                tbody.innerHTML = ''; // Limpiamos
+
+                // Validamos si no hay datos o viene el mensaje de bypass del backend
+                if (!data || data.length === 0 || data.mensaje) {
+                    tbody.innerHTML = `<p class="text-center text-muted py-3">No hay infraestructura de contenedores registrada.</p>`;
+                    return;
+                }
+                
+                loadContenedores(data); 
+            })
+            .catch(err => console.error("Error al cargar contenedores:", err));
+}
+    </script>
+
+    <!--1 Cargar y listar camiones -->
+    <script>
+        const API_CAMIONES = '../controlador/api_camiones.php';
+        function cargarCamiones() {
+            fetch(`${API_CAMIONES}/camiones`)
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('tabla_camiones');
+                    
+                    // Escudo protector: si no existe el div, salimos
+                    if (!tbody) return; 
+                    tbody.innerHTML = ''; // Limpiamos
+
+                    // Si no hay datos, mostramos el mensaje directo
+                    if (!data || data.length === 0 || data.mensaje) {
+                        tbody.innerHTML = `<p class="text-center text-muted py-3">No hay camiones registrados en la flota.</p>`;
+                        return;
+                    }
+                    
+                    loadCamiones(data); 
+                })
+                .catch(err => console.error("Error al cargar camiones:", err));
+        }
+    </script>
+        <!--1. cargar y listar Rutas-->
+    <script>
+       const API_RUTAS = '../controlador/api_rutas.php';
+
+        function cargarRutas() {
+            fetch(`${API_RUTAS}/rutas`)
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('tabla_rutas');
+                    
+                    // Escudo protector: si no existe el contenedor, salimos
+                    if (!tbody) return; 
+                    tbody.innerHTML = ''; // Limpiamos
+
+                    // Si no hay datos, mostramos el mensaje directo
+                    if (!data || data.length === 0 || data.mensaje) {
+                        tbody.innerHTML = `<p class="text-center text-muted py-3">No hay rutas planificadas en el sistema.</p>`;
+                        return;
+                    }
+                    
+                    // Pasamos los datos al load
+                    loadRutas(data); 
+                })
+                .catch(err => console.error("Error al cargar rutas:", err));
+        }
+    </script>
+    <!-- 1.0 cargar camiones funcionales-->
+   <script>
+    function inicializarFormularioRutas() {
+        const selector_camion = document.getElementById('ruta_camion');
+        if (!selector_camion) return;
+
+        // mirá si no seremos grosos que reutilizamos código
+        fetch('../controlador/api_camiones.php/camiones')
+            .then(response => response.json())
+            .then(camiones_lista => {
+                selector_camion.innerHTML = '<option value="" disabled selected>Seleccione un camión</option>';
+                
+                // Filtramos solo los funcionales para que no asignen un camión roto
+                const camiones_activos = camiones_lista.filter(c => c.cam_estado === "funcional");
+//bitacora del integrante: despues filtrame que el camion para las rutas sea de ruta, estaría lindo
+                if (camiones_activos.length === 0) {
+                    selector_camion.innerHTML = '<option value="" disabled>No hay camiones funcionales disponibles</option>';
+                    return;
+                }
+
+                camiones_activos.forEach(c => {
+                    selector_camion.innerHTML += `<option value="${c.cam_matricula}">${c.cam_matricula} (${c.cam_modelo})</option>`;
+                });
+            })
+            .catch(err => {
+                console.error("Error al cargar camiones para el formulario:", err);
+                selector_camion.innerHTML = '<option value="" disabled>Error al cargar camiones</option>';
+            });
+    }
+   </script>
+
+   <!-- 2 CREar contenedores-->
+    <script>
+        const API_CONTENEDORES = '../controlador/api_contenedores.php'; 
+        document.getElementById('form_registro_contenedores').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Armamiento del paquete JSON con los datos del contenedor ingresados
+            const nuevoContenedor = {
+                cont_id: parseInt(document.getElementById('cont_id').value),
+                cont_calle: document.getElementById('cont_calle').value,
+                cont_estado: document.getElementById('cont_estado').value
+            };
+
+            fetch(`${API_CONTENEDORES}/contenedores`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(nuevoContenedor)
+            })
+            .then(response => {
+                return response.json();
+            })           
+            .then(respuesta => {
+                alert(respuesta.mensaje); 
+
+                // Si el mensaje del backend confirma el éxito
+                if (respuesta.mensaje.includes("con éxito")) { 
+                    document.getElementById('form_registro_contenedores').reset();
+        
+                    cargarContenedores(); 
+                }
+            })
+            .catch(err => {
+                console.error("Error al registrar el contenedor:", err);
+                alert("Hubo un fallo crítico al conectar con la API de infraestructura.");
+            });
+        });
+    </script>
+   <!-- 2. CREAr usuario -->
+    <script>
+
+        document.getElementById('form_registro_usuarios').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // armamiento del paquete JSON con los datos ingresados
+            const nuevoUsuario = {
+                usr_ci: parseInt(document.getElementById('ci').value),
+                usr_name: document.getElementById('name').value,
+                usr_email: document.getElementById('email').value,
+                usr_rol: document.getElementById('rol').value,
+                usr_telefono: parseInt(document.getElementById('telefono').value)
+
+            };
+
+            fetch(`${API_URL}/usuarios`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(nuevoUsuario)
+            })//tengo una piterson teorías
+            .then(response => {
+                return response.json();
+            })           
+            .then(respuesta => {
+                alert(respuesta.mensaje); 
+
+                // Si el mensaje del backend confirma el éxito, actualiza la lista y limpia el form
+                if (respuesta.mensaje.includes("con éxito")) { 
+                    document.getElementById('form_registro_usuarios').reset();
+                    cargarUsuarios();
+                }
+            })
+            .catch(err => {
+                console.error("Error al registrar:", err);
+                alert("Hubo un fallo crítico al conectar con la API.");
+            });
+        });
+    </script>
+   <!--2 crear camion-->
+   <script>
+    document.getElementById('form_registro_camiones').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Armado del paquete JSON con los datos ingresados en el formulario
+        const nuevo_camion = {
+            cam_matricula: document.getElementById('cam_matricula').value,
+            cam_tipo: document.getElementById('cam_tipo').value,
+            cam_modelo: document.getElementById('cam_modelo').value,
+            cam_estado: document.getElementById('cam_estado').value
+        };
+
+        // Envío de los datos mediante POST a la API de camiones
+        fetch(`${API_CAMIONES}/camiones`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(nuevo_camion)
+        })
+        .then(response => {
+            return response.json();
+        })           
+        .then(respuesta => {
+            // Mostramos el mensaje (sea de éxito o el error correspondiente de validación)
+            alert(respuesta.mensaje); 
+
+            // Si el backend nos confirma el éxito, reseteamos el formulario y refrescamos la tabla
+            if (respuesta.mensaje.includes("con éxito")) { 
+                document.getElementById('form_registro_camiones').reset();
+                cargarCamiones();
+            }
+        })
+        .catch(err => {
+            console.error("Error al registrar camión:", err);
+            alert("Hubo un fallo crítico al conectar con la API de flota.");
+        });
+    });
+   </script>
+
+   <!--2 crear rutas-->
+   <script>
+    document.getElementById('form_registro_rutas').addEventListener('submit', function(e) {
+        e.preventDefault();
+       
+        //crea una variable temporal para almacenar los contenedores, así los ponemos en 
+        //formate legible para mysql
+        const texto_ids = document.getElementById('ruta_contenedores').value;
+        
+        // Separamos por comas y limpiamos los espacios de los costados
+        const fragmentos = texto_ids.split(',').map(item => item.trim());
+
+        // si el usuario dejó el campo vacío o solo con comas
+        if (fragmentos.length === 0 || fragmentos[0] === "") {
+            alert("Por favor, ingrese al menos un ID de contenedor.");
+            return;
+        }
+
+        const vector_ids = [];
+
+        // Checamos que todos los elementos estén bien
+        for (let i = 0; i < fragmentos.length; i++) {
+            const valor_actual = fragmentos[i];
+
+            // Validamos con una expresión regular que sea un número y nada más
+            // Esto se encarga de evitar "7i", "1a", "a", vacíos, etc.
+            const es_numero_puro = /^\d+$/.test(valor_actual);
+
+            if (!es_numero_puro) {
+                alert(`Error: "${valor_actual}" no es un número de ID válido. Por favor, revise lo que escribió.`);
+                return; // Corta la ejecución del submit por completo, no se envía nada a la API
+            }
+
+            // Si todo está perfecto, se guarda en el arreglo
+            vector_ids.push(parseInt(valor_actual));
+        }
+
+        // 3. Si el código llegó hasta acá, significa que TODO lo que escribió el administrador está perfecto
+        const nueva_ruta = {
+            ruta_id: parseInt(document.getElementById('ruta_id').value),
+            ruta_fecha: document.getElementById('ruta_fecha').value,
+            ruta_camion: document.getElementById('ruta_camion').value,
+            contenedores: vector_ids 
+        };
+
+        // Envío por POST a API de rutas 
+        fetch(`${API_RUTAS}/rutas`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(nueva_ruta)
+        })
+        .then(response => response.json())
+        .then(respuesta => {
+            alert(respuesta.mensaje);
+            if (respuesta.mensaje.includes("con éxito")) {
+                document.getElementById('form_registro_rutas').reset();
+                if (!document.getElementById('contenedor_tabla_rutas').classList.contains('d-none')) {
+                    cargarRutas();
+                }
+            }
+        })
+        .catch(err => {
+            console.error("Error al registrar la ruta:", err);
+            alert("Hubo un fallo crítico al conectar con la API de rutas.");
+        });
+    });
+   </script>
+    <!--2.5 modify user-->
+    <script>
+        document.getElementById('form_modificacion_usuarios').addEventListener('submit', function(e) {
+           e.preventDefault();
+            const ci = document.getElementById('mod_ci').value.trim();
+            const name = document.getElementById('mod_name').value.trim();
+            const email = document.getElementById('mod_email').value.trim();
+            const rol = document.getElementById('mod_rol').value.trim();
+            const telefono = document.getElementById('mod_telefono').value.trim();
+
+            if (ci === "" || name === "" || email === "" || rol === "" || telefono === "") {
+                alert("⚠️ Error: Todos los campos son obligatorios para modificar el usuario.");
+                return; 
+            }
+
+            // 3. Armamos el JSON real con todas las propiedades que espera el backend
+            const nuevoUsuario = {
+                usr_ci: ci,
+                usr_name: name,
+                usr_email: email,
+                usr_rol: rol,
+                usr_telefono: telefono
+            };
+
+            fetch(`${API_URL}/modificar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(nuevoUsuario)
+            })
+            .then(response => {
+                return response.json();
+            })           
+            .then(respuesta => {
+                alert(respuesta.mensaje); 
+
+                // Si el mensaje del backend confirma el éxito, actualiza la lista y limpia el form
+                if (respuesta.mensaje.includes("con éxito")) { 
+                    document.getElementById('form_modificacion_usuarios').reset();
+                    cargarUsuarios();
+                }
+            })
+            .catch(err => {
+                console.error("Error al modificar:", err);
+                alert("Hubo un fallo crítico al conectar con la API.");
+            });
+        });
+ 
+    </script>
+    <!--3. eliminar--> 
+    <script>
+        document.getElementById('form_eliminacion_usuarios').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const cedula = e.target.cedula_eliminar.value;
+            if (cedula == ""){
+                alert("Por favor, ingrese una cédula");
+                return;
+            }
+            fetch(`${API_URL}/usuarios`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ usr_ci: cedula })
+            })
+            .then(response => {
+                return response.json();
+            })           
+            .then(respuesta => {
+                alert(respuesta.mensaje); 
+                //medio rústico pero funciona
+                if (respuesta.mensaje.includes("con éxito")) { 
+                    document.getElementById('form_eliminacion_usuarios').reset();
+                    cargarUsuarios();
+                }
+            })
+            .catch(err => {
+                console.error("Error al borrar:", err);
+                alert("Hubo un fallo crítico al conectar con la API.");
+            });
+        })
+    </script>
+  
+
+    <!--Cargar la tabla de las rutas-->
+    <script>
+        function loadRutas(data) {
+            let table = document.createElement("table");
+            table.className = "table table-hover align-middle";
+
+            // Encabezados de la tabla de rutas
+            let headers = ["Ruta", "Fecha", "Camión Asignado", "Contenedores", "Estado General"];
+            let header_row= table.insertRow();
+            header_row.className = "table-light text-uppercase small font-weight-bold text-center";
+
+            headers.forEach(h => {
+                let th = document.createElement("th");
+                th.innerHTML = h;
+                header_row.appendChild(th);
+            });
+
+            // Recorremos el árbol de rutas agrupadas que viene del backend
+            data.forEach(ruta_item => {
+                let row = table.insertRow();
+                
+                // Columna 1 y 2: Línea única tradicional
+                row.insertCell().innerHTML = `# ${ruta_item.ruta_id}`;
+                row.insertCell().innerHTML = ruta_item.ruta_fecha;
+                
+                // Columna 3: Badge estático en una sola línea
+                row.insertCell().innerHTML = `<span class="badge bg-dark text-white p-2">${ruta_item.ruta_camion}</span>`;
+                
+                // Columna 4: Celda compleja con bucle interno para los contenedores
+                let celda_contenedores = row.insertCell();
+                //lo de abajo abre el div para los IDs de los contenedores
+                let contenedores_html = '<div class="d-flex flex-column gap-1 align-items-center">';
+                ruta_item.contenedores.forEach(cont_item => {
+                    let badge_class = cont_item.cont_vaciado ? 'bg-success' : 'bg-danger';
+                    let texto_estado = cont_item.cont_vaciado ? 'Vaciado' : 'Pendiente';
+                    //con el += iremos sumando IDs de contenedores(concatenando)
+                    contenedores_html += `
+                        <span class="badge ${badge_class} p-2 text-white" style="width: 110px; font-size: 0.85rem;">
+                             ID ${cont_item.cont_id} <br>
+                            <small>${texto_estado}</small>
+                        </span>
+                    `;
+                });
+                //ya con esto, todo lo que creó el += del span, lo copiamos y lo pegamos junto con este cierre del div
+                contenedores_html += '</div>';
+                celda_contenedores.innerHTML = contenedores_html;
+                
+                const ruta_completada = ruta_item.contenedores.every(c => c.cont_vaciado === true);
+                let celda_estado = row.insertCell();
+                let clase_estado = ruta_completada ? "bg-success" : "bg-warning text-dark";
+                let texto_ruta = ruta_completada ? " Completada" : " En Progreso";
+                
+                celda_estado.innerHTML = `<span class="badge ${clase_estado} text-uppercase p-2">${texto_ruta}</span>`;
+            });
+
+            // tiramos la tabla en el contenedor div del HTML
+            let div_contenedor = document.getElementById("tabla_rutas");
+            if (div_contenedor) {
+                div_contenedor.innerHTML = "";
+                div_contenedor.appendChild(table);
+            }
+        }
+    </script>
+    <!--5 Cargar la tabla de camiones-->
+    <script>
+        function loadCamiones(data) {
+    let table = document.createElement("table");
+    table.className = "table table-hover align-middle";
+
+    // Encabezados
+    let headers = ["Matrícula", "Tipo", "Modelo", "Estado"];
+    let header_row = table.insertRow();
+    header_row.className = "table-light text-uppercase small font-weight-bold";
+
+    headers.forEach(h => {
+        let th = document.createElement("th");
+        th.innerHTML = h;
+        header_row.appendChild(th);
+    });
+
+    // Filas
+    data.forEach(c => {
+        let row = table.insertRow();
+        
+        row.insertCell().innerHTML = `<span class="fw-bold">${c.cam_matricula}</span>`;
+        row.insertCell().innerHTML = c.cam_tipo;
+        row.insertCell().innerHTML = c.cam_modelo;
+        
+        // Celda del estado con color
+        let estadoCell = row.insertCell();
+        let badgeClass = c.cam_estado === "funcional" ? "bg-success" : "bg-danger";
+        
+        estadoCell.innerHTML = `<span class="badge ${badgeClass} text-uppercase">${c.cam_estado}</span>`;
+    });
+
+    let dvTable = document.getElementById("tabla_camiones");
+    if (dvTable) {
+        dvTable.innerHTML = "";
+        dvTable.appendChild(table);
+    }
+}
+    </script>
+    <!-- 5 Cargar la tabla de contendores-->
+     <script>
+        function loadContenedores(data) {
+            let table = document.createElement("table");
+            table.className = "table table-hover align-middle";
+
+            // Encabezados específicos para la infraestructura
+            let headers = ["ID", "Calle / Ubicación", "Estado"];
+            let header_row = table.insertRow();
+            header_row.className = "table-light text-uppercase small font-weight-bold";
+
+            headers.forEach(h => {
+                let th = document.createElement("th");
+                th.innerHTML = h;
+                header_row.appendChild(th);
+            });
+
+            // Mapeo y renderizado de los datos de la base de datos
+            data.forEach(c => {
+                let row = table.insertRow();
+                
+                // Celdas, en la primera columna de headers añade para la primera fila el primer insert
+                row.insertCell().innerHTML = c.cont_id;
+                row.insertCell().innerHTML = c.cont_calle;
+                
+                // Celda del estado con un badge de color dinámico
+                let estadoCell = row.insertCell();
+                let badgeClass = "bg-secondary"; // Por defecto
+                
+                if (c.cont_estado === "funcional") {
+                    badgeClass = "bg-success";   // Verde
+                } else if (c.cont_estado === "desbordado") {
+                    badgeClass = "bg-warning text-dark"; // Amarillo / Naranja
+                } else if (c.cont_estado === "roto") {
+                    badgeClass = "bg-danger";    // Rojo
+                }
+                
+                estadoCell.innerHTML = `<span class="badge ${badgeClass} text-uppercase">${c.cont_estado}</span>`;
+            });
+
+            let dvTable = document.getElementById("tabla_contenedores");
+            if (dvTable) {
+                dvTable.innerHTML = "";
+                dvTable.appendChild(table);
+            }
+        }
+     </script>
+    <!--5. Cargar la tabla de usuarios-->
+     <script>
+    function loadUsuarios(data) {
+        let table = document.createElement("table");
+        table.className = "table table-hover align-middle";
+
+        let headers = ["CI", "Nombre", "Email", "Rol", "Teléfono"];
+        let header_row = table.insertRow();
+
+        header_row.className = "table-light text-uppercase small font-weight-bold";
+
+        headers.forEach(h => {
+            let th = document.createElement("th");
+            th.innerHTML = h;
+            header_row.appendChild(th);
+        });
+        data.forEach(u => {
+            let row = table.insertRow();
+            row.insertCell().innerHTML = u.usr_ci;
+            row.insertCell().innerHTML = u.usr_name;
+            row.insertCell().innerHTML = u.usr_email;
+            row.insertCell().innerHTML = u.usr_rol;
+            row.insertCell().innerHTML = u.usr_telefono;
+        });
+        let dvTable = document.getElementById("tabla_usuarios");
+        dvTable.innerHTML = "";
+        dvTable.appendChild(table);
+    }
+    </script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
